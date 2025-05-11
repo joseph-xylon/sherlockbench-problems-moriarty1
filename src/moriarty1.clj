@@ -11,35 +11,99 @@
 (defn fuzzy-equals [a b]
   (< (Math/abs (- a b)) 0.001))
 
+(defn largest-divisor [n]
+  (cond
+    (<= n 1) n
+    (even? n) (max (/ n 2) (largest-divisor (/ n 2)))
+    :else
+    (loop [i (int (/ n 3))]
+      (cond
+        (<= i 1) 1
+        (zero? (mod n i)) i
+        :else (recur (dec i))))))
+
 (def problems
-  [{:name- "quantum state analyzer"
+  [{:name- "is descending"
     :args ["integer" "integer" "integer"]
     :function (fn [a b c]
-                (let [sum (+ a b c)
-                      product (* a b c)
-                      remainder (mod product 7)
-                      divisibility (cond
-                                     (zero? (mod sum 5)) 2
-                                     (zero? (mod sum 3)) 3
-                                     (zero? (mod sum 2)) 5
-                                     :else 1)]
-                  (if (pos? product)
-                    (+ remainder (* divisibility 10))
-                    (* -1 (+ remainder (* divisibility 10))))))
-    :verifications [[1 2 3], [5 0 5], [2 2 2], [-1 3 4], [10 5 2]]
+                (> a b c))
+    :verifications [[5, 6, 3], [12, 5, 4], [5, 7, 90], [15, 2, 7]]
+    :output-type "boolean"
+    :test-limit 20
+    :tags #{::all}}
+
+   {:name- "sum with max 10"
+    :args ["integer" "integer" "integer"]
+    :function (fn [a b c]
+                (max 10 (+ a b c)))
+    :verifications [[2, 3, 2], [4, 7, 11], [8, 1, 1], [0, 7, 2]]
+    :output-type "integer"
+    :test-limit 20
+    :tags #{::all}}
+
+   {:name- "sum and round to multiple of 3"
+    :args ["integer" "integer"]
+    :function (fn [a b]
+                (let [sum (+ a b)
+                      remainder (mod sum 3)]
+                  (if (zero? remainder)
+                    sum
+                    (+ sum (- 3 remainder)))))
+    :verifications [[5, 7], [5, 18], [21, 7], [14, 2]]
+    :output-type "integer"
+    :test-limit 20
+    :tags #{::all}}
+   
+   {:name- "sum and find largest divisor"
+    :args ["integer" "integer" "integer"]
+    :function (fn [a b c]
+                (largest-divisor (+ a b c)))
+    :verifications [[3, 7, 19], [6, 2, 8], [20, 1, 6], [4, 3, 8]]
     :output-type "integer"
     :test-limit 30
     :tags #{::all}}
-   
+
+   {:name- "elemental phase analyzer"
+    :args ["integer" "string"]
+    :function (fn [temp scale]
+                (let [celsius (case scale
+                                "C" temp
+                                "F" (int (/ (- temp 32) 1.8))
+                                "K" (- temp 273)
+                                "R" (int (/ (- temp 492) 1.8))
+                                "Invalid scale - must be C, F, K, or R")]
+                  (if (string? celsius)
+                    celsius
+                    (let [material (string/lower-case scale)
+                          boiling-points {"c" 100  ; water
+                                         "f" 357   ; mercury
+                                         "k" 2792  ; gold
+                                         "r" 883}  ; nitrogen
+                          freezing-points {"c" 0
+                                          "f" -39
+                                          "k" 1064
+                                          "r" -210}
+                          boiling (get boiling-points material)
+                          freezing (get freezing-points material)]
+                      (cond
+                        (nil? boiling) "Unknown material"
+                        (< celsius freezing) "Solid"
+                        (> celsius boiling) "Gas"
+                        :else "Liquid")))))
+    :verifications [[100 "C"], [32 "F"], [1100 "K"], [-20 "C"], [400 "F"], [15 "R"]]
+    :output-type "string"
+    :test-limit 40
+    :tags #{::all}}
+
    {:name- "planetary zones"
     :args ["integer" "integer"]
     :function (fn [x y]
                 (let [distance (Math/sqrt (+ (* x x) (* y y)))
-                      angle (if (and (zero? x) (zero? y)) 
-                              0 
+                      angle (if (and (zero? x) (zero? y))
+                              0
                               (Math/toDegrees (Math/atan2 y x)))
                       normalized-angle (mod (+ angle 360) 360)
-                      quadrant (cond 
+                      quadrant (cond
                                  (< normalized-angle 90) 1
                                  (< normalized-angle 180) 2
                                  (< normalized-angle 270) 3
@@ -75,39 +139,26 @@
     :output-type "string"
     :test-limit 40
     :tags #{::all}}
-   
-   {:name- "elemental phase analyzer"
-    :args ["integer" "string"]
-    :function (fn [temp scale]
-                (let [celsius (case scale
-                                "C" temp
-                                "F" (int (/ (- temp 32) 1.8))
-                                "K" (- temp 273)
-                                "R" (int (/ (- temp 492) 1.8))
-                                "Invalid scale - must be C, F, K, or R")]
-                  (if (string? celsius)
-                    celsius
-                    (let [material (string/lower-case scale)
-                          boiling-points {"c" 100  ; water
-                                         "f" 357   ; mercury
-                                         "k" 2792  ; gold
-                                         "r" 883}  ; nitrogen
-                          freezing-points {"c" 0
-                                          "f" -39
-                                          "k" 1064
-                                          "r" -210}
-                          boiling (get boiling-points material)
-                          freezing (get freezing-points material)]
-                      (cond
-                        (nil? boiling) "Unknown material"
-                        (< celsius freezing) "Solid"
-                        (> celsius boiling) "Gas"
-                        :else "Liquid")))))
-    :verifications [[100 "C"], [32 "F"], [1100 "K"], [-20 "C"], [400 "F"], [15 "R"]]
-    :output-type "string"
-    :test-limit 40
+
+   {:name- "quantum state analyzer"
+    :args ["integer" "integer" "integer"]
+    :function (fn [a b c]
+                (let [sum (+ a b c)
+                      product (* a b c)
+                      remainder (mod product 7)
+                      divisibility (cond
+                                     (zero? (mod sum 5)) 2
+                                     (zero? (mod sum 3)) 3
+                                     (zero? (mod sum 2)) 5
+                                     :else 1)]
+                  (if (pos? product)
+                    (+ remainder (* divisibility 10))
+                    (* -1 (+ remainder (* divisibility 10))))))
+    :verifications [[1 2 3], [5 0 5], [2 2 2], [-1 3 4], [10 5 2]]
+    :output-type "integer"
+    :test-limit 30
     :tags #{::all}}
-   
+
    {:name- "multi-layered cipher system"
     :args ["string" "integer"]
     :function (fn [input key]

@@ -20,4 +20,4 @@ clj -X:test
 ```
 
 ## Version
-This is Moriarty1v1
+This is Moriarty1v2
