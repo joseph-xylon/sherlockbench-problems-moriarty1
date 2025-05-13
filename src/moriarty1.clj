@@ -8,9 +8,6 @@
 (def tag-names
   {::all "All"})
 
-(defn fuzzy-equals [a b]
-  (< (Math/abs (- a b)) 0.001))
-
 (defn largest-divisor [n]
   (cond
     (<= n 1) n
@@ -22,26 +19,16 @@
         (zero? (mod n i)) i
         :else (recur (dec i))))))
 
+(defn fuzzy-equals [a b]
+  (< (Math/abs (- a b)) 0.001))
+
+(defn median3
+  "Median of three integers (middle value after sorting)."
+  [a b c]
+  (nth (sort [a b c]) 1))
+
 (def problems
-  [{:name- "is descending"
-    :args ["integer" "integer" "integer"]
-    :function (fn [a b c]
-                (> a b c))
-    :verifications [[5, 6, 3], [12, 5, 4], [5, 7, 90], [15, 2, 7]]
-    :output-type "boolean"
-    :test-limit 20
-    :tags #{::all}}
-
-   {:name- "sum with max 10"
-    :args ["integer" "integer" "integer"]
-    :function (fn [a b c]
-                (max 10 (+ a b c)))
-    :verifications [[2, 3, 2], [4, 7, 11], [8, 1, 1], [0, 7, 2]]
-    :output-type "integer"
-    :test-limit 20
-    :tags #{::all}}
-
-   {:name- "sum and round to multiple of 3"
+  [{:name- "sum and round to multiple of 3"
     :args ["integer" "integer"]
     :function (fn [a b]
                 (let [sum (+ a b)
@@ -50,6 +37,17 @@
                     sum
                     (+ sum (- 3 remainder)))))
     :verifications [[5, 7], [5, 18], [21, 7], [14, 2]]
+    :output-type "integer"
+    :test-limit 20
+    :tags #{::all}}
+
+   {:name- "range times median"
+    :args ["integer" "integer" "integer"]
+    :function (fn [a b c]
+                (let [rng (- (max a b c) (min a b c))
+                      med (median3 a b c)]
+                  (* rng med)))
+    :verifications [[1 2 3] [10 5 7] [4 4 4] [-3 1 2]]
     :output-type "integer"
     :test-limit 20
     :tags #{::all}}
@@ -63,7 +61,53 @@
     :test-limit 30
     :tags #{::all}}
 
-   {:name- "elemental phase analyzer"
+   {:name- "is descending"
+    :args ["integer" "integer" "integer"]
+    :function (fn [a b c]
+                (> a b c))
+    :verifications [[5, 6, 3], [12, 5, 4], [5, 7, 90], [15, 2, 7]]
+    :output-type "boolean"
+    :test-limit 20
+    :tags #{::all}}
+
+   {:name- "set heading"
+    :args ["integer" "integer"]
+    :function (fn [a b]
+                (let [lat  66
+                      long 110
+                      vdiff (- lat a)
+                      hdiff (- long b)]
+                  (cond
+                    (and (zero? vdiff) (zero? hdiff))
+                    "secret921"
+
+                    (> (Math/abs vdiff) (Math/abs hdiff))
+                    (if (pos? vdiff) "North" "South")
+
+                    :else
+                    (if (pos? hdiff) "East" "West"))))
+    :verifications [[36, 140]
+                    [54, 144]
+                    [30, 150]]
+    :output-type "string"
+    :test-limit 30
+    :tags #{::all ::investigation}}
+
+   {:name- "crack lock"
+    :args ["integer" "integer" "integer"]
+    :function (fn [a b c]
+                (let [code [6 7 1]
+                      attempts [a b c]
+                      acc (reduce + (map #(Math/abs (- %1 %2)) code attempts))]
+                  (if (zero? acc)
+                    "secret823"
+                    acc)))
+    :verifications [[5 3 8]]
+    :output-type "string"
+    :test-limit 20
+    :tags #{::all ::investigation ::crack-lock}}
+
+    {:name- "elemental phase analyzer"
     :args ["integer" "string"]
     :function (fn [temp scale]
                 (let [celsius (case scale
@@ -186,5 +230,4 @@
     :verifications [["hello" 3], ["abcde" 1], ["TEST" 12], ["scientific" 7], ["apple" 0]]
     :output-type "string"
     :test-limit 40
-    :tags #{::all}}
-  ])
+    :tags #{::all}}])
